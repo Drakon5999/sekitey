@@ -69,5 +69,5 @@ def extract_features(urls, labels=None):
                     add_to_dict("segment_ext_substr[0-9]_" + str(j) + ":" + exts[-1], labels)  # e
 
             add_to_dict("segment_len_" + str(j) + ":" + str(len(segments[j])), labels)  # f
-            lst.append(features)
+        lst.append(features)
     return lst

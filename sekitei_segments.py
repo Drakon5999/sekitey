@@ -31,11 +31,11 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     global classificator
     global standartizator
     quota = []
+    y = np.empty(1000)
     threshold = 90
     nclusters = 15
     df = pd.DataFrame()
     df = df.append(exf.extract_features(QLINK_URLS), ignore_index=True)
-    df["IsQlink"] = 1
     df = df.append(exf.extract_features(UNKNOWN_URLS), ignore_index=True)
     
     cnts = df.count()
@@ -45,8 +45,8 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
         if cnts[i] < threshold:
             todrop.append(df.columns[i])
     df = df.drop(todrop, axis=1)
-    y = df["IsQlink"].values
-    df = df.drop("IsQlink", axis=1)
+    y[:500] = 1
+    y[500:] = 0
     X = df.values
     
     # X1 = TSNE().fit_transform(X)
@@ -82,9 +82,9 @@ def fetch_url(url):
     d = exf.extract_features([url], df.columns)[0].values()
     d = standartizator.transform([d])[0]
     cls = clusterizer.predict([d])[0]
-    # if classificator.predict_proba([d])[0][1] > 0.7:
-        # quota[cls] -= 1
-        # return True
+    if classificator.predict_proba([d])[0][1] > 0.7:
+        quota[cls] -= 1
+        return True
     if quota[cls] > 0:
         quota[cls] -= 1
         return True
