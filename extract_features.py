@@ -38,35 +38,36 @@ def add_to_dict(label, exist):
     else:
         features[label] = 1
     
-def extract_features(url, labels=None):
+def extract_features(urls, labels=None):
     global features
-    
-    features = dict()
-    if labels is not None:
-        for l in labels:
-            features[l] = 0
-    segments, params = parse_url(url)
-    add_to_dict("segments:" + str(len(segments)), labels)  # 1
-    for j in xrange(len(params)):
-        add_to_dict("param_name:" + params[j][0], labels)  # 2
-        if (len(params[j]) == 2):
-            add_to_dict("param:" + params[j][0] + "=" + params[j][1], labels) # 3
+    lst = []
+    for url in urls:
+        features = dict()
+        if labels is not None:
+            for l in labels:
+                features[l] = 0
+        segments, params = parse_url(url)
+        add_to_dict("segments:" + str(len(segments)), labels)  # 1
+        for j in xrange(len(params)):
+            add_to_dict("param_name:" + params[j][0], labels)  # 2
+            if (len(params[j]) == 2):
+                add_to_dict("param:" + params[j][0] + "=" + params[j][1], labels) # 3
 
-    for j in xrange(len(segments)):  # 4
-        add_to_dict("segment_name_" + str(j) + ":" + segments[j], labels)  # a
-        
-        exts = segments[j].split(".")
-        if len(exts) > 1:
-            add_to_dict("segment_ext_" + str(j) + ":" + exts[-1], labels)  # d
-        if re.match("[\d]+$", segments[j]) is not None:
-            add_to_dict("segment_[0-9]_" + str(j) + ":1", labels)  # b
-        if re.match("[^\d]+\d+[^\d]+$", segments[j]) is not None:
-            add_to_dict("segment_substr[0-9]_" + str(j) + ":1", labels)  # c
-
+        for j in xrange(len(segments)):  # 4
+            add_to_dict("segment_name_" + str(j) + ":" + segments[j], labels)  # a
+            
             exts = segments[j].split(".")
             if len(exts) > 1:
-                add_to_dict("segment_ext_substr[0-9]_" + str(j) + ":" + exts[-1], labels)  # e
+                add_to_dict("segment_ext_" + str(j) + ":" + exts[-1], labels)  # d
+            if re.match("[\d]+$", segments[j]) is not None:
+                add_to_dict("segment_[0-9]_" + str(j) + ":1", labels)  # b
+            if re.match("[^\d]+\d+[^\d]+$", segments[j]) is not None:
+                add_to_dict("segment_substr[0-9]_" + str(j) + ":1", labels)  # c
 
-        add_to_dict("segment_len_" + str(j) + ":" + str(len(segments[j])), labels)  # f
+                exts = segments[j].split(".")
+                if len(exts) > 1:
+                    add_to_dict("segment_ext_substr[0-9]_" + str(j) + ":" + exts[-1], labels)  # e
 
-    return features
+            add_to_dict("segment_len_" + str(j) + ":" + str(len(segments[j])), labels)  # f
+            lst.append(features)
+    return lst

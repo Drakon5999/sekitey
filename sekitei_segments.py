@@ -16,6 +16,8 @@ import numpy as np
 import extract_features as exf
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+from sklearn.manifold import TSNE
+from matplotlib import pyplot as plt
 
 quota = []
 clusterizer = ""
@@ -29,18 +31,12 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     global classificator
     global standartizator
     quota = []
-    threshold = 100
-    nclusters = 2
+    threshold = 90
+    nclusters = 15
     df = pd.DataFrame()
-    for url in QLINK_URLS:
-        d = exf.extract_features(url)
-        d["IsQlink"] = 1
-        df = df.append(d, ignore_index=True)
-    
-    for url in QLINK_URLS:
-        d = exf.extract_features(url)
-        d["IsQlink"] = 0
-        df = df.append(d, ignore_index=True)
+    df = df.append(exf.extract_features(QLINK_URLS), ignore_index=True)
+    df["IsQlink"] = 1
+    df = df.append(exf.extract_features(UNKNOWN_URLS), ignore_index=True)
     
     cnts = df.count()
     df = df.fillna(0)
@@ -52,6 +48,14 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     y = df["IsQlink"].values
     df = df.drop("IsQlink", axis=1)
     X = df.values
+    
+    # X1 = TSNE().fit_transform(X)
+    
+    # plt.scatter(X1[:, 0], X1[:, 1], c=y*8, cmap=plt.cm.get_cmap("jet", 10), s=1)
+    # plt.colorbar(ticks=range(10))
+    # plt.clim(-0.5, 9.5)
+    # plt.show()
+    
     standartizator = StandardScaler()
     X = standartizator.fit_transform(X)
     clusterizer = KMeans(n_clusters=nclusters)
@@ -64,7 +68,7 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     
     for i in xrange(nclusters):
         qlInCluster.append(sum(y[clusterizer.labels_ == i]))
-        quota.append(QUOTA/500 * qlInCluster[i] + QUOTA/100)
+        quota.append(90 * qlInCluster[i] + QUOTA/100)
     
 
 #
@@ -75,12 +79,12 @@ def fetch_url(url):
     global clusterizer
     global df
     global standartizator
-    d = exf.extract_features(url, df.columns).values()
+    d = exf.extract_features([url], df.columns)[0].values()
     d = standartizator.transform([d])[0]
     cls = clusterizer.predict([d])[0]
-    if classificator.predict_proba([d])[0][1] > 0.6:
-        quota[cls] -= 1
-        return True
+    # if classificator.predict_proba([d])[0][1] > 0.7:
+        # quota[cls] -= 1
+        # return True
     if quota[cls] > 0:
         quota[cls] -= 1
         return True
