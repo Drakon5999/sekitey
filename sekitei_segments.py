@@ -24,11 +24,13 @@ clusterizer = ""
 df = []
 classificator = ""
 standartizator = ""
+toexist = []
 def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     global quota
     global clusterizer
     global df
     global classificator
+    global toexist
     global standartizator
     quota = []
     y = np.empty(1000)
@@ -40,14 +42,13 @@ def define_segments(QLINK_URLS, UNKNOWN_URLS, QUOTA):
     
     cnts = df.count()
     df = df.fillna(0)
-    todrop = []
+    toexist = []
     for i in xrange(len(cnts)):
-        if cnts[i] < threshold:
-            todrop.append(df.columns[i])
-    df = df.drop(todrop, axis=1)
+        if cnts[i] > threshold:
+            toexist.append(df.columns[i])
     y[:500] = 1
     y[500:] = 0
-    X = df.values
+    X = df[toexist].values
     
     # X1 = TSNE().fit_transform(X)
     
@@ -79,7 +80,7 @@ def fetch_url(url):
     global clusterizer
     global df
     global standartizator
-    d = exf.extract_features([url], df.columns)[0].values()
+    d = exf.extract_features([url], toexist)[0].values()
     d = standartizator.transform([d])[0]
     cls = clusterizer.predict([d])[0]
     if classificator.predict_proba([d])[0][1] > 0.7:
